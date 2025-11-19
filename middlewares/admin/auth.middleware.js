@@ -14,6 +14,7 @@ module.exports.requireAuth = async (req, res, next) =>{
             const role = await Role.findOne({
                 _id: user.role_id
             })
+            console.log(role)
             res.locals.userMDW = user 
             res.locals.roleMDW = role
             next()

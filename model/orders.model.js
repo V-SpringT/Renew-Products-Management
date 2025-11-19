@@ -20,6 +20,11 @@ const orderSchema = new mongoose.Schema(
                 discountPercentage: Number
             }
         ],
+        status: {
+            type: String,
+            enum: ["pending", "packed", "shipping", "completed", "failed"],
+            default: "pending"
+        },
         deleted: {
             type: Boolean,
             default: false

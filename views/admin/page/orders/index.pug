@@ -1,0 +1,100 @@
+extends ../../layout/default.pug
+include ../../mixins/Alert
+include ../../mixins/moment
+
+block main
+    +alert-success(4000)
+    +alert-error(4000)
+    if(roleMDW.permissions.includes("orders_view"))
+        h1.mb-4 Quản lý đơn hàng
+        .card.mb-3
+            .card-header Lọc dữ liệu
+            .card-body
+                form.row.g-2(method="GET")
+                    .col-md-4
+                        input.form-control(
+                            type="text",
+                            name="keyword",
+                            placeholder="Tên khách hàng",
+                            value=keyword
+                        )
+                    .col-md-3
+                        select.form-select(name="status")
+                            option(value="") Tất cả trạng thái
+                            if statuses
+                                each statusItem in statuses
+                                    option(
+                                        value=statusItem.value,
+                                        selected=statusFilter === statusItem.value
+                                    ) #{statusItem.label}
+                    .col-auto
+                        button.btn.btn-primary(type="submit")
+                            i.fa-solid.fa-magnifying-glass.mr-1
+                            | Tìm kiếm
+                    if keyword
+                        .col-auto
+                            a.btn.btn-light(href=`${prefixAdmin}/orders`) Xóa lọc
+        .card
+            .card-header Danh sách đơn hàng
+            .card-body.p-0
+                if orders && orders.length
+                    table.table.table-hover.mb-0
+                        thead
+                            tr
+                                th #
+                                th Mã đơn
+                                th Khách hàng
+                                th Trạng thái
+                                th Số sản phẩm
+                                th Tổng tiền
+                                th Ngày tạo
+                                th Cập nhật trạng thái
+                                th Hành động
+                        tbody
+                            each order, index in orders
+                                tr
+                                    td #{index + 1}
+                                    td
+                                        strong #{order.code}
+                                        br
+                                        small.text-muted #{order._id}
+                                    td
+                                        - const customerName = (order.userInfor && order.userInfor.fullName) || "Không rõ"
+                                        - const customerPhone = (order.userInfor && order.userInfor.phone) || ""
+                                        strong #{customerName}
+                                        br
+                                        small.text-muted #{customerPhone}
+                                    td
+                                        if order.statusMeta
+                                            span.badge(class=`bg-${order.statusMeta.badge}`) #{order.statusMeta.label}
+                                        else
+                                            span.badge.bg-secondary Không rõ
+                                    td #{order.totalQuantity}
+                                    td #{order.totalPriceDisplay} ₫
+                                    td
+                                        +formatDateTime(order.createdAt)
+                                    td
+                                        if statuses && statuses.length
+                                            form(
+                                                method="POST",
+                                                action=`${prefixAdmin}/orders/change-status/${order._id}?_method=PATCH`,
+                                                class="row g-2 align-items-center flex-lg-nowrap"
+                                            )
+                                                .col-lg-8.col-12
+                                                    select.form-select.form-select-sm(name="status")
+                                                        each statusItem in statuses
+                                                            option(
+                                                                value=statusItem.value,
+                                                                selected=order.status === statusItem.value
+                                                            ) #{statusItem.label}
+                                                .col-lg-4.col-12
+                                                    button.btn.btn-outline-primary.btn-sm.w-100(type="submit") Cập nhật
+                                        else
+                                            span.text-muted Không có quyền cập nhật
+                                    td
+                                        a.btn.btn-secondary.btn-sm(
+                                            href=`${prefixAdmin}/orders/detail/${order._id}`
+                                        ) Chi tiết
+                else
+                    .p-4.text-center.text-muted Chưa có đơn hàng nào
+

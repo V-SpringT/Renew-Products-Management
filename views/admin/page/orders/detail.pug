@@ -1,0 +1,93 @@
+extends ../../layout/default.pug
+include ../../mixins/Alert
+include ../../mixins/moment
+
+block main
+    +alert-success(4000)
+    +alert-error(4000)
+    if(roleMDW.permissions.includes("orders_view"))
+        h1.mb-4 Chi tiết đơn hàng
+        .mb-3
+            a.btn.btn-link.p-0(href=`${prefixAdmin}/orders`)
+                i.fa-solid.fa-chevron-left.mr-1
+                | Quay lại danh sách
+        .row
+            .col-md-6
+                .card.mb-4
+                    .card-header Thông tin chung
+                    .card-body
+                        p.mb-1
+                            strong Mã đơn: 
+                            | #{order.code || order._id}
+                        p.mb-1
+                            strong Ngày tạo: 
+                            +formatDateTime(order.createdAt)
+                        p.mb-1
+                            strong Trạng thái hiện tại: 
+                            if order.statusMeta
+                                span.badge(class=`bg-${order.statusMeta.badge} ms-2`) #{order.statusMeta.label}
+                            else
+                                span.badge.bg-secondary.ms-2 Không rõ
+                        p.mb-0
+                            strong Tổng tiền: 
+                            | #{order.totalPriceDisplay} ₫
+                        if statuses && statuses.length
+                            hr
+                            form.row.g-2.align-items-center(
+                                method="POST",
+                                action=`${prefixAdmin}/orders/change-status/${order._id}?_method=PATCH`
+                            )
+                                .col-md-7.col-12
+                                    select.form-select(name="status")
+                                        each statusItem in statuses
+                                            option(
+                                                value=statusItem.value,
+                                                selected=order.status === statusItem.value
+                                            ) #{statusItem.label}
+                                .col-md-5.col-12
+                                    button.btn.btn-primary.w-100(type="submit") Cập nhật trạng thái
+            .col-md-6
+                .card.mb-4
+                    .card-header Thông tin khách hàng
+                    .card-body
+                        - const detailName = (order.userInfor && order.userInfor.fullName) || "Không rõ"
+                        - const detailPhone = (order.userInfor && order.userInfor.phone) || "Không rõ"
+                        - const detailAddress = (order.userInfor && order.userInfor.address) || "Không rõ"
+                        p.mb-1
+                            strong Họ tên: 
+                            | #{detailName}
+                        p.mb-1
+                            strong Số điện thoại: 
+                            | #{detailPhone}
+                        p.mb-0
+                            strong Địa chỉ: 
+                            | #{detailAddress}
+        .card
+            .card-header Sản phẩm (#{order.totalQuantity})
+            .card-body.p-0
+                if order.products && order.products.length
+                    table.table.table-striped.mb-0
+                        thead
+                            tr
+                                th #
+                                th Sản phẩm
+                                th Đơn giá
+                                th Số lượng
+                                th Thành tiền
+                        tbody
+                            each item, index in order.products
+                                tr
+                                    td #{index + 1}
+                                    td
+                                        if item.productInfor
+                                            strong #{item.productInfor.title}
+                                        else
+                                            strong.text-danger Sản phẩm đã bị xóa
+                                        br
+                                        small.text-muted ID: #{item.product_id}
+                                    td #{item.finalPriceDisplay} ₫
+                                    td #{item.quantity}
+                                    td #{item.totalPriceDisplay} ₫
+                else
+                    .p-4.text-center.text-muted Không có sản phẩm trong đơn hàng này
+

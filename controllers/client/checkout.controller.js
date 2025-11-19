@@ -50,7 +50,8 @@ module.exports.order = async (req, res) =>{
     const objectOder = {
         cart_id : cartId,
         userInfor: req.body,
-        products: products
+        products: products,
+        status: "pending"
     }
     
     const order = new Order(objectOder)
